@@ -10,16 +10,19 @@
 </head>
 
 <body>
-    <h1>student quiz</h1>
-    <p>Enter your name to begin the exam </p>
-    <label for="studentName">studentName</label>
-    <input type="text" id="studentName">
-    <button id="startButton">start quiz</button>
-    <div id="questionsContainer"></div>
-    <button id="submitButton">submit answers</button>
+    <main class="quiz-card">
+        <h1>Student Quiz</h1>
+        <p>Five quick maths questions. Take your time and choose your answers.</p>
+        <label for="studentName">Your name</label>
 
-    <div id="resultContainer"></div>
-    <button id="restartButton" hidden>Restart Quiz</button>
+        <input type="text" id="studentName" placeholder="e.g. tasneem" autocomplete="given-name">
+        <button id="startButton">Start Quiz</button>
+        <div id="questionsContainer"></div>
+        <button id="submitButton">submit answers</button>
+
+        <div id="resultContainer"></div>
+        <button id="restartButton" hidden>Restart Quiz</button>
+    </main>
     <script src="script.js"></script>
 
 
