@@ -4,6 +4,7 @@ const nameInput = document.getElementById("studentName");
 const startButton = document.getElementById("startButton");
 const questionsContainer = document.getElementById("questionsContainer");
 let questions = [];
+let attemptId = null;
 
 
 const resultContainer = document.getElementById("resultContainer");
@@ -25,7 +26,9 @@ async function startQuiz() {
             throw new Error("Could not load questions");
         }
 
-        questions = await response.json();
+        const quiz = await response.json();
+        questions = quiz.questions;
+        attemptId = quiz.attemptId;
 
         questionsContainer.textContent = "";
         resultContainer.textContent = "";
@@ -40,6 +43,7 @@ async function startQuiz() {
 
             for (let i = 0; i < question.options.length; i++) {
                 const optionContainer = document.createElement("div");
+                optionContainer.className = "answer-option";
 
                 const optionInput = document.createElement("input");
                 optionInput.type = "radio";
@@ -60,7 +64,9 @@ async function startQuiz() {
         }
 
         submitButton.style.display = "inline-block";
+        updateSubmitButton();
         startButton.style.display = "none";
+        nameInput.disabled = true;
     } catch (error) {
         resultContainer.textContent =
             "Could not load questions. Check the server and try again.";
@@ -100,6 +106,7 @@ async function submitQuiz() {
             },
             body: JSON.stringify({
                 name: nameInput.value.trim(),
+                attemptId: attemptId,
                 answers: answers
             })
         });
@@ -114,7 +121,7 @@ async function submitQuiz() {
         resultContainer.textContent =
             "Your score: " + result.score + "/" + result.total +
             " — " + (result.passed ? "Passed" : "Failed");
-
+        showAnswerFeedback(result.results);
         restartButton.hidden = false;
     } catch (error) {
         resultContainer.textContent =
@@ -125,6 +132,12 @@ async function submitQuiz() {
     }
 }
 startButton.addEventListener("click", startQuiz);
+nameInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" && !startButton.disabled) {
+        event.preventDefault();
+        startQuiz();
+    }
+});
 
 
 const submitButton = document.getElementById("submitButton");
@@ -136,6 +149,7 @@ function restartQuiz() {
     questionsContainer.textContent = "";
     resultContainer.textContent = "";
     nameInput.value = "";
+    nameInput.disabled = false;
     questions = [];
 
     submitButton.style.display = "none";
@@ -144,8 +158,39 @@ function restartQuiz() {
 
     nameInput.focus();
 }
+function updateSubmitButton() {
+    const answeredCount = questionsContainer.querySelectorAll(
+        'input[type="radio"]:checked'
+    ).length;
 
+    submitButton.disabled = answeredCount !== questions.length;
+}
+questionsContainer.addEventListener("change", updateSubmitButton);
 restartButton.addEventListener("click", restartQuiz);
 
 
 
+function showAnswerFeedback(results) {
+    questionsContainer.querySelectorAll(".answer-option").forEach(function (row) {
+        row.classList.remove("is-wrong", "is-correct");
+    });
+
+    results.forEach(function (answerResult) {
+        const questionIndex = questions.findIndex(function (question) {
+            return question.id === answerResult.questionId;
+        });
+
+        const input = document.getElementById(
+            "question" + questionIndex +
+            "-option" + answerResult.selectedIndex
+        );
+
+        if (input) {
+            const className = answerResult.isCorrect
+                ? "is-correct"
+                : "is-wrong";
+
+            input.parentElement.classList.add(className);
+        }
+    });
+}
